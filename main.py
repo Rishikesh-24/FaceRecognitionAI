@@ -21,6 +21,7 @@ def Face_Data_load(fileName, personName):
     namesList = [personName]
     fileName = f'{fileName}.jpg'
     img = cv2.imread(f"./Images/{fileName}")
+    # print(fileName)
     imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     encodeList = face_recognition.face_encodings(imgRGB)
     if len(encodeList) != 0:
@@ -72,17 +73,17 @@ def findFace(img):
             cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
             cv2.rectangle(img, (x1, y2 - 35), (x2, y2), (0, 255, 0), -1)
             faceDis = list(faceDis)
-            print(faceDis)
+            # print(faceDis)
             if min(faceDis) > 0.5:
                 name = None
             else:
                 name = knownNames[faceDis.index(min(faceDis))]
             names.append(name)
-            print(names)
+            # print(names)
             cv2.putText(img, name, (x1 + 6, y2 - 6),
                         cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 2)
 
-    return names, img  # img
+    return names, img
 
 
 def writeImage(img, name):
@@ -94,7 +95,6 @@ def captureImage():
     while True:
         success, img = cap.read()
         cv2.namedWindow("Image Capture", WINDOW_AUTOSIZE)
-        # cv2.resizeWindow("Image Capture", 480, 640)
         names, img = findFace(img)
         # img[button[0]:button[1], button[2]:button[3]] = 180
         # cv2.putText(img, 'Button', (620, 180), cv2.FONT_HERSHEY_PLAIN, 2, 0, 3)
@@ -108,8 +108,9 @@ def captureImage():
 
 def captureImageAddData(name):
     cap = cv2.VideoCapture(0)
-    while True:
-        success, img = cap.read()
+    imageTaken = True
+    while imageTaken:
+        _, img = cap.read()
         imgs = cv2.resize(img, (0, 0), None, 0.25, 0.25)
         imgRGB = cv2.cvtColor(imgs, cv2.COLOR_BGR2RGB)
         cv2.rectangle(img, (10, 10), (100, 20), 0, -1)
@@ -127,6 +128,7 @@ def captureImageAddData(name):
             break
         elif k == 32:
             writeImage(img, name)
+            imageTaken = False
             break
 
 
@@ -143,7 +145,7 @@ if __name__ == "__main__":
         if choice == 1:
             name = input("Enter the person's name: ")
             captureImageAddData(name)
-            Face_Data_load(f"{name}.jpg", name)
+            Face_Data_load(name, name)
         elif choice == 2:
             name = input("Enter the person's name: ")
             pictureFile = input(
