@@ -4,13 +4,7 @@ from sklearn import svm
 import json
 import pyttsx3
 
-engine = pyttsx3.init()
-engine.setProperty("rate", 150)
 
-# Global Variables
-clf = None
-detectionStack = []
-newFaceAdded = False
 
 def addFace(imgArray, name):
     encodes, name = [], name
@@ -70,6 +64,9 @@ def getEncodesReTrainModel():
 
 
 def findFace(img):
+
+    global newFaceAdded
+
     if newFaceAdded or clf == None:
         getEncodesReTrainModel()
         newFaceAdded = False
@@ -88,21 +85,38 @@ def speechOutput(names):
         engine.runAndWait()
 
 def findFaceCam():
+    global detectionStack
+
+
     cap = cv2.VideoCapture(0)
-    i = 1
+    frameCount = 1
     while True:
         _, img = cap.read()
         if _:
             faces = findFace(img)
+            names = []
             for i in faces:
                 if i in detectionStack:
                     continue
                 else:
+                    names.append(i)
                     detectionStack.append(i)
-            speechOutput(detectionStack)
-        if i == 150:
+            # print(detectionStack, names)
+            speechOutput(names)
+        if frameCount == 150:
             detectionStack = []
-        i += 1
+        frameCount += 1
+
+if __name__ == "__main__":
+    engine = pyttsx3.init()
+    engine.setProperty("rate", 150)
+
+    # Global Variables
+    clf = None
+    detectionStack = []
+    newFaceAdded = False
+
+    findFaceCam()
     
             
 
