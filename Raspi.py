@@ -16,6 +16,8 @@ def addFace(imgArray, name):
     return encodes, name
 
 def addFaceData(encodes, name):
+    global newFaceAdded
+    
     with open("faceEncodes.json", 'r+') as f:
         faceData = json.load(f)
         faceData['faces'].append({'name': name, 'faceEncodes': encodes})
@@ -65,7 +67,7 @@ def getEncodesReTrainModel():
 
 def findFace(img):
 
-    global newFaceAdded
+    global newFaceAdded, clf
 
     if newFaceAdded or clf == None:
         getEncodesReTrainModel()
