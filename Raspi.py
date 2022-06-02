@@ -3,6 +3,7 @@ import cv2
 from sklearn import svm
 import json
 import pyttsx3
+import os
 
 
 
@@ -36,9 +37,20 @@ def captureImageTrain(name):
             k = cv2.waitKey(1)
             if k == 27:
                 break
-            elif k == 32:
+            elif k == 32 and len(imgArray) < 10:
                 imgArray.append(img)
+            elif len(imgArray) == 10:
+                break
     print(len(imgArray), imgArray[0].shape)
+    encodes, name = addFace(imgArray, name)
+    addFaceData(encodes, name)
+
+def addTrainData(name, path = './Images/'):
+    global newFaceAdded
+
+    imgArray = []
+    for img in os.listdir(path):
+        imgArray.append(cv2.imread(path + img))
     encodes, name = addFace(imgArray, name)
     addFaceData(encodes, name)
 
@@ -61,7 +73,7 @@ def getEncodesReTrainModel():
         for j in i['faceEncodes']:
             encodes.append(j)
             names.append(i['name'])
-    clf = svm.SVC(gamma='scale')
+    clf = svm.SVC(gamma='scale', probability=True)
     clf.fit(encodes, names)
 
 
@@ -76,8 +88,14 @@ def findFace(img):
     facesPresent = []
     for i in range(len(faceLoc)):
         enc = fr.face_encodings(img)[i]
+        # somthing = clf.predict_proba([enc])[0]
+        # print(somthing, clf.classes_)
+        # if any(map(lambda x:x > (len(clf.classes_)/1000) * 35, clf.predict_proba([enc])[0])):
         name = clf.predict([enc])
+        print(name)
         facesPresent.append(name[0])
+        # else:
+        #     facesPresent.append("Guest")
     return facesPresent
 
 def speechOutput(names):
@@ -92,9 +110,10 @@ def findFaceCam():
 
     cap = cv2.VideoCapture(0)
     frameCount = 1
+    frameCountClean = 1
     while True:
         _, img = cap.read()
-        if _:
+        if _ and frameCount % 5 == 0:
             faces = findFace(img)
             names = []
             for i in faces:
@@ -103,24 +122,29 @@ def findFaceCam():
                 else:
                     names.append(i)
                     detectionStack.append(i)
-            # print(detectionStack, names)
+                # print(detectionStack, names)
             speechOutput(names)
-        if frameCount == 150:
+            if "Guest" in detectionStack and frameCountClean % 10 == 0:
+                detectionStack.remove("Guest")
+            frameCountClean += 1
+            
+        if frameCountClean == 150:
             detectionStack = []
         frameCount += 1
 
 if __name__ == "__main__":
     engine = pyttsx3.init()
     engine.setProperty("rate", 150)
+    voices = engine.getProperty('voices')
+    engine.setProperty('voice', voices[0].id)
 
     # Global Variables
     clf = None
     detectionStack = []
     newFaceAdded = False
 
+    # captureImageTrain("Mister Phaneendra")
     findFaceCam()
     
-            
-
-
-
+    # getEncodesReTrainModel()
+    # addTrainData("Tom Bhaaya", "./Images/")
